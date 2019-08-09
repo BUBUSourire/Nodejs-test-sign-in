@@ -48,10 +48,10 @@ var server = http.createServer(function (request, response) {
       // let password = hash['password']
       // let password_confirm = hash['password_confirm']
       let{email,password,password_confirm} = hash //ES6写法
-      if(email.indexOf('@') === -1){
+      if(email.indexOf(encodeURIComponent('@')) === -1){
         response.statusCode = 400
         // response.write('email is error')
-        //JSON 前后端交互协议，后端SON格式表达提示，前段解析 
+        //JSON 前后端交互协议，后端SON格式表达提示 
         response.setHeader('Content-Type', 'application/json;charset=utf-8')
         response.write(`{
           "error":{
