@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>sign up</title>
+    <title>sign in</title>
     <style>
         * {
             padding: 0;
@@ -36,7 +36,7 @@
             text-align: center;
         }
 
-        #formContent #signUpForm .row>label {
+        #formContent #signInForm .row>label {
             display: inline-block;
             min-width: 4em;
             margin-right: 10px;
@@ -45,14 +45,14 @@
             text-align-last: justify;
         }
 
-        #formContent #signUpForm .row #sub {
+        #formContent #signInForm .row #sub {
             display: block;
             width: 60px;
             margin: 0 auto;
             margin-top: 20px;
         }
 
-        #formContent #signUpForm .row .error {
+        #formContent #signInForm .row .error {
             display: inline-block;
             min-width: 80px;
             font-size: 12px;
@@ -63,8 +63,8 @@
 
 <body>
     <div id="formContent">
-        <h2>注册</h2>
-        <form id="signUpForm">
+        <h2>登录</h2>
+        <form id="signInForm">
             <div class="row">
                 <label>邮箱</label>
                 <input type="text" name="email">
@@ -76,64 +76,49 @@
                 <span class="error"></span>
             </div>
             <div class="row">
-                <label>确认密码</label>
-                <input type="password" name="password_confirm">
-                <span class="error"></span>
-            </div>
-            <div class="row">
-                <input type="submit" value="注册" id="sub">
+                <input type="submit" value="登录" id="sub">
             </div>
         </form>
     </div>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script>
         let hash = {}
-        $('#signUpForm').on('submit', (e) => {
+        $('#signInForm').on('submit', (e) => {
             e.preventDefault()
-            let need = ['email', 'password', 'password_confirm']
+            let need = ['email', 'password']
             need.forEach((name) => {
-                let value = $('#signUpForm').find(`[name=${name}]`).val()//查询name的值即${name}，获取value
+                let value = $('#signInForm').find(`[name=${name}]`).val()//查询name的值即${name}，获取value
                 hash[name] = value
             });
 
-            $('#signUpForm').find('.error').each((index, span) => {
+            $('#signInForm').find('.error').each((index, span) => {
                 $(span).text('')
             })
             if (hash['email'] === '') {
-                $('#signUpForm').find('[name="email"]').siblings('.error').text('请输入邮箱!')
+                $('#signInForm').find('[name="email"]').siblings('.error').text('请输入邮箱!')
                 return
             }
             if (hash['password'] === '') {
-                $('#signUpForm').find('[name="password"]').siblings('.error').text('请输入密码!')
-                return
-            }
-            if (hash['password_confirm'] === '') {
-                $('#signUpForm').find('[name="password_confirm"]').siblings('.error').text('请确认密码!')
-                return
-            }
-            if (hash['password'] !== hash['password_confirm']) {
-                $('#signUpForm').find('[name="password_confirm"]').siblings('.error').text('密码不匹配!')
+                $('#signInForm').find('[name="password"]').siblings('.error').text('请输入密码!')
                 return
             }
 
-            $.post('/sign_up', hash)
+            $.post('/sign_in', hash)
                 .then((response) => {
-                    alert('注册成功')
+                    alert('登录成功')
                 }, (request) => {
                     // let object = JSON.parse(request.responseText)  可简写成如下
                     // let errors = object.errors  可简写成如下
                     let { error } = request.responseJSON
                     if (error.email && error.email === 'invalid') {
-                        $('#signUpForm').find('[name="email"]').siblings('.error').text('邮箱格式错误!')
-                    }else if (error.email && error.email === 'inUse'){
+                        $('#signInForm').find('[name="email"]').siblings('.error').text('邮箱格式错误!')
+                    } else if (error.email && error.email === 'inUse') {
                         alert('邮箱已被注册！')
                     }
-                    
+
                 })
         })
     </script>
-
 </body>
 
 </html>

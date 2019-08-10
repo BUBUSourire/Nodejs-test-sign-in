@@ -35,20 +35,23 @@ var server = http.createServer(function (request, response) {
     response.end()
   } else if (path === '/sign_up' && method === 'POST') {
     readBody(request).then((body) => {
-      let strings = body.split('&') //[email=1,password=2,password_confirm=3]
+      let strings = body.split('&') //[email=1,password=2,password_confirm=3])
       let hash = {}
       strings.forEach((string) => {
         //string == 'email=1'
         let parts = string.split('=')//['email','1']
         let key = parts[0]
         let value = parts[1]
-        hash[key] = value //hash['name']='1'
+        hash[key] = decodeURIComponent(value) //hash['name']='1'  特殊字符转义
       })
       // let email = hash['email']
       // let password = hash['password']
       // let password_confirm = hash['password_confirm']
-      let{email,password,password_confirm} = hash //ES6写法
-      if(email.indexOf(encodeURIComponent('@')) === -1){
+      let { email, password, password_confirm } = hash //ES6写法
+
+      //判断邮箱格式
+
+      if (email.indexOf('@') === -1) {
         response.statusCode = 400
         // response.write('email is error')
         //JSON 前后端交互协议，后端SON格式表达提示 
@@ -59,14 +62,99 @@ var server = http.createServer(function (request, response) {
           }
         }`)
 
-      }else if(password !== password_confirm){
+      } else if (password !== password_confirm) {
         response.statusCode = 400
         response.write('password not match')
-      }else{
-        response.statusCode = 200
+      } else {
+        var users = fs.readFileSync('./db/users', 'utf-8')
+        try {
+          users = JSON.parse(users)
+        } catch (exception) { //exception 异常
+          users = []
+        }
+
+        //判断是否已经被注册过
+
+        let inUse = false
+        for (let i = 0; i < users.length; i++) {
+          let user = users[i]
+          if (user.email === email) {
+            inUse = true
+            break;
+          }
+        }
+        if (inUse) {
+          response.statusCode = 400
+          // response.write('email in use')
+          //JSON 前后端交互协议，后端SON格式表达提示 
+          response.setHeader('Content-Type', 'application/json;charset=utf-8')
+          response.write(`{
+         "error":{
+           "email":"inUse"
+         }
+       }`)
+        } else {
+          users.push({ email: email, password: password })
+          var usersString = JSON.stringify(users)
+          fs.writeFileSync('./db/users', usersString)
+          response.statusCode = 200
+        }
       }
       console.log(hash)
-      response.statusCode = 200
+      response.end()
+    })
+  } else if (path === '/sign_in' && method === 'GET') {
+    let string = fs.readFileSync('./sign_in.html', 'utf-8')
+    response.statusCode = 200
+    response.setHeader('Content-Type', 'text/html;charset=utf-8')
+    response.write(string)
+    response.end()
+  } else if (path === '/sign_in' && method === 'POST') {
+    readBody(request).then((body) => {
+      let strings = body.split('&') //[email=1,password=2,password_confirm=3]
+      let hash = {}
+      strings.forEach((string) => {
+        //string == 'email=1'
+        let parts = string.split('=')//['email','1']
+        let key = parts[0]
+        let value = parts[1]
+        hash[key] = decodeURIComponent(value) //hash['name']='1'  特殊字符转义
+      })
+      let { email, password } = hash //ES6写法
+
+      //判断邮箱格式
+
+      if (email.indexOf('@') === -1) {
+        response.statusCode = 400
+        // response.write('email is error')
+        //JSON 前后端交互协议，后端SON格式表达提示 
+        response.setHeader('Content-Type', 'application/json;charset=utf-8')
+        response.write(`{
+          "error":{
+            "email":"invalid"
+          }
+        }`)
+      } else {
+        var users = fs.readFileSync('./db/users', 'utf-8')
+        try {
+          users = JSON.parse(users)
+        } catch (exception) { //exception 异常
+          users = []
+        }
+        let found
+        for (let i = 0; i < users.length; i++) {
+          if (users[i].email === email && users[i].password === password) {
+            found = true
+            break;
+          }
+        }
+        if (found) {
+          response.statusCode = 200
+        } else {
+          response.statusCode = 401
+        }
+        console.log('ok')
+      }
       response.end()
     })
   } else if (path === '/main.js') {
