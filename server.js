@@ -22,19 +22,32 @@ var server = http.createServer(function (request, response) {
   console.log('方方说：含查询字符串的路径\n' + pathWithQuery)
 
   if (path === '/') {
-    let string = fs.readFileSync('./index.html', 'utf-8')
-    
+    let string = fs.readFileSync('./index.html', 'utf8')
+
     //读取用户信息
     let cookies = request.headers.cookie.split('; ') // 以; 为分割依据，将用户信息组成数组：[]
     let hash = {}
-    for(let i=0;i<cookies.length;i++){
+    for (let i = 0; i < cookies.length; i++) {
       let parts = cookies[i].split('=')
       let key = parts[0]
       let value = parts[1]
-      hash[key]=value
+      hash[key] = value
     }
-    console.log('hash')
-    console.log(hash)
+    let email = hash.sign_in_email
+    let users = fs.readFileSync('./db/users','utf8')
+    users = JSON.parse(users)
+    let foundUsers
+    for (let i = 0; i < users.length; i++) {
+      if (users[i].email === email) {
+        foundUsers = users[i]
+        break
+      }
+    }
+    if (foundUsers) {
+      string = string.replace('__password__', foundUsers.password)
+    } else {
+      string = string.replace('__password__', '未知密码')
+    }
 
     response.statusCode = 200
     response.setHeader('Content-Type', 'text/html;charset=utf-8')

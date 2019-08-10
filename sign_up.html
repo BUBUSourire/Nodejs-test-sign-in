@@ -120,6 +120,7 @@
             $.post('/sign_up', hash)
                 .then((response) => {
                     alert('注册成功')
+                    window.location.href = '/sign_in'
                 }, (request) => {
                     // let object = JSON.parse(request.responseText)  可简写成如下
                     // let errors = object.errors  可简写成如下
