@@ -23,6 +23,19 @@ var server = http.createServer(function (request, response) {
 
   if (path === '/') {
     let string = fs.readFileSync('./index.html', 'utf-8')
+    
+    //读取用户信息
+    let cookies = request.headers.cookie.split('; ') // 以; 为分割依据，将用户信息组成数组：[]
+    let hash = {}
+    for(let i=0;i<cookies.length;i++){
+      let parts = cookies[i].split('=')
+      let key = parts[0]
+      let value = parts[1]
+      hash[key]=value
+    }
+    console.log('hash')
+    console.log(hash)
+
     response.statusCode = 200
     response.setHeader('Content-Type', 'text/html;charset=utf-8')
     response.write(string)
@@ -139,7 +152,7 @@ var server = http.createServer(function (request, response) {
       if (found) {
         // Set-Cookie: <cookie-name>=<cookie-value>  记录是哪个用户=============cookie
         response.setHeader(
-          'Set-Cookie',`sign_in_email=${email}`)
+          'Set-Cookie', `sign_in_email=${email}`)
         response.statusCode = 200
       } else {
         response.statusCode = 401
