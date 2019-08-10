@@ -122,38 +122,23 @@ var server = http.createServer(function (request, response) {
       })
       let { email, password } = hash //ES6写法
 
-      //判断邮箱格式
-
-      if (email.indexOf('@') === -1) {
-        response.statusCode = 400
-        // response.write('email is error')
-        //JSON 前后端交互协议，后端SON格式表达提示 
-        response.setHeader('Content-Type', 'application/json;charset=utf-8')
-        response.write(`{
-          "error":{
-            "email":"invalid"
-          }
-        }`)
+      var users = fs.readFileSync('./db/users', 'utf-8')
+      try {
+        users = JSON.parse(users)
+      } catch (exception) { //exception 异常
+        users = []
+      }
+      let found
+      for (let i = 0; i < users.length; i++) {
+        if (users[i].email === email && users[i].password === password) {
+          found = true
+          break;
+        }
+      }
+      if (found) {
+        response.statusCode = 200
       } else {
-        var users = fs.readFileSync('./db/users', 'utf-8')
-        try {
-          users = JSON.parse(users)
-        } catch (exception) { //exception 异常
-          users = []
-        }
-        let found
-        for (let i = 0; i < users.length; i++) {
-          if (users[i].email === email && users[i].password === password) {
-            found = true
-            break;
-          }
-        }
-        if (found) {
-          response.statusCode = 200
-        } else {
-          response.statusCode = 401
-        }
-        console.log('ok')
+        response.statusCode = 401
       }
       response.end()
     })

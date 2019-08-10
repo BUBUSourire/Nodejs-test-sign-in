@@ -106,16 +106,9 @@
             $.post('/sign_in', hash)
                 .then((response) => {
                     alert('登录成功')
+                    window.location.href = '/'
                 }, (request) => {
-                    // let object = JSON.parse(request.responseText)  可简写成如下
-                    // let errors = object.errors  可简写成如下
-                    let { error } = request.responseJSON
-                    if (error.email && error.email === 'invalid') {
-                        $('#signInForm').find('[name="email"]').siblings('.error').text('邮箱格式错误!')
-                    } else if (error.email && error.email === 'inUse') {
-                        alert('邮箱已被注册！')
-                    }
-
+                    alert('邮箱与密码不匹配！')
                 })
         })
     </script>
