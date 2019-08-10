@@ -122,6 +122,7 @@ var server = http.createServer(function (request, response) {
       })
       let { email, password } = hash //ES6写法
 
+      //读取数据库中的数据 
       var users = fs.readFileSync('./db/users', 'utf-8')
       try {
         users = JSON.parse(users)
@@ -136,6 +137,9 @@ var server = http.createServer(function (request, response) {
         }
       }
       if (found) {
+        // Set-Cookie: <cookie-name>=<cookie-value>  记录是哪个用户=============cookie
+        response.setHeader(
+          'Set-Cookie',`sign_in_email=${email}`)
         response.statusCode = 200
       } else {
         response.statusCode = 401
