@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            height: 100%;
+        }
+
+        body {
+            min-height: 100%;
+            border: 1px solid red;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        #formContent {
+            padding: 20px 20px 20px 60px;
+            border: 1px solid #ddd;
+        }
+
+        #formContent>h2 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        #formContent #signUpForm .row>label {
+            display: inline-block;
+            min-width: 4em;
+            margin-right: 10px;
+            vertical-align: middle;
+            text-align: justify;
+            text-align-last: justify;
+        }
+
+        #formContent #signUpForm .row #sub {
+            display: block;
+            width: 60px;
+            margin: 0 auto;
+            margin-top: 20px;
+        }
+
+        #formContent #signUpForm .row .error {
+            display: inline-block;
+            min-width: 80px;
+            font-size: 12px;
+            color: red;
+        }
+    </style>
+    </head>
+
+    <body>
+        <div id="formContent">
+            <h2>注 册</h2>
+            <form id="signUpForm">
+                <div class="row">
+                    <label>邮箱</label>
+                    <input type="text" name="email">
+                    <span class="error"></span>
+                </div>
+                <div class="row">
+                    <label>密码</label>
+                    <input type="password" name="password">
+                    <span class="error"></span>
+                </div>
+                <div class="row">
+                    <label>确认密码</label>
+                    <input type="password" name="password_confirm">
+                    <span class="error"></span>
+                </div>
+                <div class="row">
+                    <input type="submit" value="注册" id="sub">
+                </div>
+            </form>
+        </div>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script>
+
+            //获取用户传入的邮箱及密码
+
+            let hash = {}
+            $('#signUpForm').on('submit', (e) => {
+                e.preventDefault()//阻止默认提交事件
+                let need = ['email', 'password', 'password_confirm']
+                need.forEach((name) => {
+                    let value = $('#signUpForm').find(`[name=${name}]`).val()//.find(`[name=${name}]`)查询name字段   .val()获取name对应的value
+                    hash[name] = value
+                })
+
+                //判断用户填写是否为空，密码是否匹配
+                $('#signUpForm').find('.error').each((index, span) => {
+                    $(span).text('')
+                })
+                if (hash['email'] === '') {
+                    $('#signUpForm').find('[name="email"]').siblings('.error').text('请填写邮箱')
+                    return
+                }
+                if (hash['password'] === '') {
+                    $('#signUpForm').find('[name="password"]').siblings('.error').text('请填写密码')
+                    return
+                }
+                if (hash['password_confirm'] === '') {
+                    $('#signUpForm').find('[name="password_confirm"]').siblings('.error').text('请确认密码')
+                    return
+                }
+                if (hash['password'] !== hash['password_confirm']) {
+                    $('#signUpForm').find('[name="password_confirm"]').siblings('.error').text('密码不匹配')
+                    return
+                }
+
+                //Ajax post
+                $.post('/sign_up', hash)
+                    .then(() => {
+                        alert('邮箱注册成功！')
+                        window.location.href = '/sign_in'
+                    }, (request) => {
+                        // let object = JSON.parse(request.responseText) //将JSON格式的字符串转换成对象 {errors: {email: "invalid"}}
+                        // let errors = object.errors //获取errors里面的字段  {email: "invalid"}
+                        let { errors } = request.responseJSON //上面两行代码的简写
+                        //判断邮箱格式及是否已被注册
+                        if (errors.email && errors.email === 'invalid') {
+                            $('#signUpForm').find('[name="email"]').siblings('.error').text('邮箱格式错误')
+                        } else if (errors.email && errors.email === 'inUse') {
+                            alert('邮箱已被注册！')
+                        }
+                    })
+            })
+
+            //添加错误提示
+
+        </script>
+    </body>
+
+</html>
