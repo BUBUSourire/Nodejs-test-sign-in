@@ -8,6 +8,10 @@ if (!port) {
   process.exit(1)
 }
 
+let sessions = {
+
+}
+
 var server = http.createServer(function (request, response) {
   var parsedUrl = url.parse(request.url, true)
   var pathWithQuery = request.url
@@ -25,15 +29,22 @@ var server = http.createServer(function (request, response) {
     let string = fs.readFileSync('./index.html', 'utf8')
 
     //读取用户信息
-    let cookies = request.headers.cookie.split('; ') // 以; 为分割依据，将用户信息组成数组：[]
+    let cookies = ''
+    if(request.headers.cookie){
+      cookies = request.headers.cookie.split('; ') // 以; 为分割依据，将用户信息组成数组：[]
+    }
     let hash = {}
     for (let i = 0; i < cookies.length; i++) {
       let parts = cookies[i].split('=')
       let key = parts[0]
       let value = parts[1]
-      hash[key] = value
+      hash[key] = value  // hash { sign_in_email: '33@33', sessionId: '93749.62641918282' }
     }
-    let email = hash.sign_in_email
+    let mySession = sessions[hash.sessionId] //mySession { sign_in_email: '33@33' }
+    let email
+    if(mySession){
+      email = mySession.sign_in_email
+    }
     let users = fs.readFileSync('./db/users','utf8')
     users = JSON.parse(users)
     let foundUsers
@@ -163,9 +174,12 @@ var server = http.createServer(function (request, response) {
         }
       }
       if (found) {
+        //给用户cookie一个随机sessionId
+        let sessionId = Math.random()*100000
+        sessions[sessionId] = {sign_in_email:email}
         // Set-Cookie: <cookie-name>=<cookie-value>  记录是哪个用户=============cookie
         response.setHeader(
-          'Set-Cookie', `sign_in_email=${email}`)
+          'Set-Cookie', `sessionId=${sessionId}`)
         response.statusCode = 200
       } else {
         response.statusCode = 401
