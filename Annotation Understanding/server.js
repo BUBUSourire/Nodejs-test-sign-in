@@ -23,16 +23,27 @@ var server = http.createServer(function (request, response) {
     if (path === '/') {
         let string = fs.readFileSync('./index.html', 'utf-8')
 
-        //拿到用户的cookie
-        let cookies = request.headers.cookie.split('; ') //[ 'sign_in_email=11@11.com' ]
+        //读取用户信息
+        let cookies = ''
+        if (request.headers.cookie) {
+            cookies = request.headers.cookie.split('; ') // 以; 为分割依据，将用户信息组成数组：[]
+        }
         let hash = {}
         for (let i = 0; i < cookies.length; i++) {
-            let parts = cookies[i].split('=') //[ 'sign_in_email', '11@11.com' ]
+            let parts = cookies[i].split('=')
             let key = parts[0]
             let value = parts[1]
-            hash[key] = value //{ sign_in_email: '11@11.com' }
+            hash[key] = value  // hash { sign_in_email: '33@33', sessionId: '93749.62641918282' }
         }
-        let email = hash.sign_in_email
+
+        //  通过用户cookie的sessionId，找到对应的sign_in_email，从而获取用户当前的email，用户只能看到sessionId，而不能直接看到email
+
+        let mySession = sessions[hash.sessionId] //mySession { sign_in_email: '33@33' }
+        let email
+        if (mySession) { //此处判断是因为一旦页面刷新，内存就会被释放
+            email = mySession.sign_in_email
+        }
+        // console.log(session) //session { '2972.954371701109': { sign_in_email: '11@11.com' } }
 
         //读取数据库
         let users = fs.readFileSync('./db/users', 'utf-8')
@@ -186,15 +197,20 @@ var server = http.createServer(function (request, response) {
                     }
                 }
                 if (found) {
-                    // Set-Cookie: <cookie-name>=<cookie-value>  记录是哪个用户=============cookie
-                    response.setHeader('Set-Cookie', `sign_in_email=${email}`) //通过cookie记录用户的email
-                    response.statusCode = 200
-                } else {
-                    response.statusCode = 401
+                    if (found) {
+                        //给用户cookie一个随机sessionId
+                        let sessionId = Math.random() * 100000
+                        sessions[sessionId] = { sign_in_email: email } //将cookie记录到sessionId中，防止用户直接读取cookie内容
+                        // Set-Cookie: <cookie-name>=<cookie-value>  记录是哪个用户=============cookie
+                        response.setHeader(
+                            'Set-Cookie', `sessionId=${sessionId}`)
+                        response.statusCode = 200
+                    } else {
+                        response.statusCode = 401
+                    }
                 }
-            }
-            response.end()
-        })
+                response.end()
+            })
     } else if (path === '/main.js') {
         let string = fs.readFileSync('./main.js', 'utf-8')
         response.statusCode = 200

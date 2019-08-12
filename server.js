@@ -31,7 +31,7 @@ var server = http.createServer(function (request, response) {
     //读取用户信息
     let cookies = ''
     if(request.headers.cookie){
-      cookies = request.headers.cookie.split('; ') // 以; 为分割依据，将用户信息组成数组：[]
+      cookies = request.headers.cookie.split('; ')
     }
     let hash = {}
     for (let i = 0; i < cookies.length; i++) {
@@ -41,11 +41,9 @@ var server = http.createServer(function (request, response) {
       hash[key] = value  // hash { sign_in_email: '33@33', sessionId: '93749.62641918282' }
     }
 
-    //  通过用户cookie的sessionId，找到对应的sign_in_email，从而获取用户当前的email，用户只能看到sessionId，而不能直接看到email
-
     let mySession = sessions[hash.sessionId] //mySession { sign_in_email: '33@33' }
     let email
-    if(mySession){ //此处判断是因为一旦页面刷新，内存就会被释放
+    if(mySession){
       email = mySession.sign_in_email
     }
     console.log(sessions)
