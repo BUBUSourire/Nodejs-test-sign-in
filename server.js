@@ -40,11 +40,15 @@ var server = http.createServer(function (request, response) {
       let value = parts[1]
       hash[key] = value  // hash { sign_in_email: '33@33', sessionId: '93749.62641918282' }
     }
+
+    //  通过用户cookie的sessionId，找到对应的sign_in_email，从而获取用户当前的email，用户只能看到sessionId，而不能直接看到email
+
     let mySession = sessions[hash.sessionId] //mySession { sign_in_email: '33@33' }
     let email
-    if(mySession){
+    if(mySession){ //此处判断是因为一旦页面刷新，内存就会被释放
       email = mySession.sign_in_email
     }
+    console.log(sessions)
     let users = fs.readFileSync('./db/users','utf8')
     users = JSON.parse(users)
     let foundUsers
@@ -176,7 +180,7 @@ var server = http.createServer(function (request, response) {
       if (found) {
         //给用户cookie一个随机sessionId
         let sessionId = Math.random()*100000
-        sessions[sessionId] = {sign_in_email:email}
+        sessions[sessionId] = {sign_in_email:email} //将cookie记录到sessionId中，防止用户直接读取cookie内容
         // Set-Cookie: <cookie-name>=<cookie-value>  记录是哪个用户=============cookie
         response.setHeader(
           'Set-Cookie', `sessionId=${sessionId}`)
