@@ -23,7 +23,7 @@ var server = http.createServer(function (request, response) {
 
   /******** 从这里开始看，上面不要看 ************/
 
-  console.log('方方说：含查询字符串的路径\n' + pathWithQuery)
+  console.log('含查询字符串的路径\n' + pathWithQuery)
 
   if (path === '/') {
     let string = fs.readFileSync('./index.html', 'utf8')
